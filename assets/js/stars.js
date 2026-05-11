@@ -4,7 +4,7 @@ for (let i = 0; i < 180; i++) {
   const star = document.createElement('div');
   star.className = 'star';
 
-  const size = Math.random() * 4 + 2.5;
+  const size = Math.random() * 4 + 2;
 
   star.style.width = `${size}px`;
   star.style.height = `${size}px`;
