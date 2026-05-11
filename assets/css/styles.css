@@ -26,8 +26,19 @@ body {
 
 .star {
   position: absolute;
-  border-radius: 50%;
   background: rgba(0, 0, 0, 0.75);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
   animation: twinkle ease-in-out infinite;
 }
 
@@ -38,7 +49,7 @@ body {
   background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.9));
   border-radius: 999px;
   opacity: 0;
-  transform: rotate(-25deg);
+  transform: rotate(26.5deg);
 }
 
 .shooting-star.active {
@@ -101,7 +112,7 @@ main {
 @keyframes shoot {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(-25deg);
+    transform: translate3d(0, 0, 0) rotate(26.5deg);
   }
 
   10% {
@@ -110,7 +121,7 @@ main {
 
   100% {
     opacity: 0;
-    transform: translate3d(120vw, 60vh, 0) rotate(-25deg);
+    transform: translate3d(120vw, 60vh, 0) rotate(26.5deg);
   }
 }
 
