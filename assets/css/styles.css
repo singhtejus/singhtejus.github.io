@@ -1,6 +1,6 @@
 :root {
   --text: #eef2f7;
-  --background: #5d6773;
+  --background: #1e232a;
   --star: rgba(255, 255, 255, 0.78);
   --shooting-star: rgba(255, 255, 255, 0.92);
   --border: rgba(255, 255, 255, 0.14);
@@ -176,7 +176,8 @@ main {
   margin: 0 0 4px 0;
   text-align: left;
   font-size: 1.1rem;
-  font-weight: 400;
+  font-weight: 600;
+  text-decoration: underline;
 }
 
 .bio p {
