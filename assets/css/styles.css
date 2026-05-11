@@ -5,7 +5,7 @@
   --shooting-star: rgba(0, 0, 0, 0.9);
   --border: rgba(0, 0, 0, 0.14);
   --radius: 16px;
-  --glass: rgba(255, 255, 255, 0.18);
+  --glass: rgba(255, 255, 255, 0.10);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -111,8 +111,8 @@ main {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
 .bio-title,
