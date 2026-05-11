@@ -23,8 +23,11 @@ starfield.appendChild(shootingStar);
 function launchShootingStar() {
   shootingStar.classList.remove('active');
 
-  shootingStar.style.top = `${10 + Math.random() * 35}%`;
-  shootingStar.style.left = '-160px';
+  const startTop = Math.random() * 55;
+  const startLeft = -200 - Math.random() * 200;
+
+  shootingStar.style.top = `${startTop}%`;
+  shootingStar.style.left = `${startLeft}px`;
 
   void shootingStar.offsetWidth;
 
