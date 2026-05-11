@@ -6,6 +6,7 @@
   --border: rgba(0, 0, 0, 0.14);
   --radius: 16px;
   --glass: rgba(255, 255, 255, 0.10);
+  --shoot-angle: 26.565deg;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -65,7 +66,8 @@ body {
   background: linear-gradient(90deg, transparent, var(--shooting-star));
   border-radius: 999px;
   opacity: 0;
-  transform: rotate(26.5deg);
+  transform-origin: right center;
+  transform: rotate(var(--shoot-angle));
 }
 
 .shooting-star.active {
@@ -160,7 +162,7 @@ main {
 @keyframes shoot {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(26.5deg);
+    transform: translate3d(0, 0, 0) rotate(var(--shoot-angle));
   }
 
   10% {
@@ -169,7 +171,7 @@ main {
 
   100% {
     opacity: 0;
-    transform: translate3d(120vw, 60vh, 0) rotate(26.5deg);
+    transform: translate3d(120vw, 60vw, 0) rotate(var(--shoot-angle));
   }
 }
 
