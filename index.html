@@ -1,70 +1,36 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tejus Singh</title>
-<style>
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  line-height: 1.7;
-  color: #222;
-  background: #f7f7f7;
-}
-main {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 64px 24px;
-}
-.header {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  margin-bottom: 36px;
-}
-.header img {
-  width: 180px;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 16px;
-}
-.header-text h1 {
-  font-size: 3rem;
-  margin: 0 0 12px 0;
-}
-.header-text p {
-  margin: 0;
-  font-size: 1.15rem;
-}
-.bio {
-  font-size: 1.08rem;
-  margin-top: 24px;
-}
-.bio p {
-  margin-bottom: 20px;
-}
-a {
-  color: inherit;
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tejus Singh</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-<main>
-  <section class="header">
-    <img src="assets/images/tejus-pic.png" alt="Tejus Singh">
-    <div class="header-text">
-      <h1>Hi I'm Tejus Singh</h1>
-      <p>MS CS at UC San Diego</p>
-      <p>BS Applied Physics, Math Minor at UC Irvine</p>
-    </div>
-  </section>
+  <div id="starfield"></div>
 
-  <section class="bio">
-    <p>
-      Hi I'm Tejus. I am currently studying Computer Science at UC San Diego, specializing in artificial intelligence. I have pursued an interdisciplinary course of study with a strong emphasis on physics, computer science, math, statistics, and electrical engineering. I am motivated by research-driven and open-ended problems in LLM theory, machine learning, and computational modeling.
-    </p>
-  </section>
-</main>
+  <main>
+    <section class="header">
+      <img src="assets/images/tejus-pic.png" alt="Tejus Singh">
+
+      <div class="header-text">
+        <h1>Hi I'm Tejus Singh</h1>
+        <p>MS CS at UC San Diego</p>
+        <p>BS Applied Physics, Math Minor at UC Irvine</p>
+      </div>
+    </section>
+
+    <section class="bio">
+      <p>
+        Hi I'm Tejus. I am currently studying Computer Science at UC San Diego, specializing in artificial intelligence. I have pursued an interdisciplinary course of study with a strong emphasis on physics, computer science, math, statistics, and electrical engineering. I am motivated by research-driven and open-ended problems in LLMs, machine learning, and computational modeling.
+      </p>
+
+      <p>
+        My experience across both academic research and industry drives me to bridge theory with practical engineering. I am particularly effective in projects that require implementing academic research ideas into application and production ready systems. I hope to make meaningful contributions and appreciate your time and consideration.
+      </p>
+    </section>
+  </main>
+
+  <script src="assets/js/stars.js"></script>
 </body>
 </html>
