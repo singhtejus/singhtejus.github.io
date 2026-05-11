@@ -145,6 +145,7 @@ main {
 .bio p {
   margin-bottom: 20px;
   font-size: 1.08rem;
+  text-align: justify;
 }
 
 .resume iframe {
