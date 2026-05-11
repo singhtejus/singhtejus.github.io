@@ -1,10 +1,10 @@
 const starfield = document.getElementById('starfield');
 
-for (let i = 0; i < 120; i++) {
+for (let i = 0; i < 200; i++) {
   const star = document.createElement('div');
   star.className = 'star';
 
-  const size = Math.random() * 2.5 + 1;
+  const size = Math.random() * 3.5 + 1;
 
   star.style.width = `${size}px`;
   star.style.height = `${size}px`;
