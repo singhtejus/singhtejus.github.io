@@ -6,8 +6,8 @@
   --border: rgba(0, 0, 0, 0.14);
   --radius: 16px;
   --glass: rgba(255, 255, 255, 0.12);
-  --glass-edge: rgba(255, 255, 255, 0.72);
-  --glass-shadow: rgba(0, 0, 0, 0.14);
+  --glass-edge: rgba(255, 255, 255, 0.62);
+  --glass-shadow: rgba(0, 0, 0, 0.08);
   --shoot-angle: 26.565deg;
 }
 
@@ -19,8 +19,8 @@
     --shooting-star: rgba(255, 255, 255, 0.95);
     --border: rgba(255, 255, 255, 0.16);
     --glass: rgba(255, 255, 255, 0.04);
-    --glass-edge: rgba(255, 255, 255, 0.28);
-    --glass-shadow: rgba(0, 0, 0, 0.45);
+    --glass-edge: rgba(255, 255, 255, 0.22);
+    --glass-shadow: rgba(0, 0, 0, 0.18);
   }
 }
 
@@ -119,43 +119,19 @@ main {
   padding: 28px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.34), transparent 22%),
-    linear-gradient(315deg, rgba(255, 255, 255, 0.18), transparent 28%),
-    var(--glass);
-  backdrop-filter: blur(7px) saturate(135%) contrast(105%);
-  -webkit-backdrop-filter: blur(7px) saturate(135%) contrast(105%);
+  background: var(--glass);
+  backdrop-filter: blur(7px) saturate(130%);
+  -webkit-backdrop-filter: blur(7px) saturate(130%);
   box-shadow:
     inset 1px 1px 0 var(--glass-edge),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.06),
-    0 12px 34px var(--glass-shadow);
+    0 6px 18px var(--glass-shadow);
 }
 
 .bio::before,
-.resume::before {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  z-index: -1;
-  border-radius: calc(var(--radius) - 1px);
-  background:
-    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.38), transparent 20%),
-    radial-gradient(circle at 86% 88%, rgba(255, 255, 255, 0.16), transparent 24%);
-  opacity: 0.72;
-  pointer-events: none;
-}
-
+.resume::before,
 .bio::after,
 .resume::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: var(--radius);
-  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.24) 42%, transparent 58%);
-  opacity: 0.42;
-  transform: translateX(-18%);
-  pointer-events: none;
+  display: none;
 }
 
 .bio-title,
