@@ -3,6 +3,8 @@
   --background: #f7f7f7;
   --star: rgba(0, 0, 0, 0.75);
   --shooting-star: rgba(0, 0, 0, 0.9);
+  --border: rgba(0, 0, 0, 0.14);
+  --radius: 16px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -11,6 +13,7 @@
     --background: #111;
     --star: rgba(255, 255, 255, 0.8);
     --shooting-star: rgba(255, 255, 255, 0.95);
+    --border: rgba(255, 255, 255, 0.16);
   }
 }
 
@@ -86,7 +89,7 @@ main {
   width: 180px;
   height: 180px;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: var(--radius);
 }
 
 .header-text h1 {
@@ -100,12 +103,22 @@ main {
 }
 
 .bio {
-  font-size: 1.08rem;
   margin-top: 24px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.bio-title {
+  margin: 0 0 18px 0;
+  font-size: 1.2rem;
+  font-weight: 400;
 }
 
 .bio p {
   margin-bottom: 20px;
+  font-size: 1.08rem;
 }
 
 @keyframes twinkle {
