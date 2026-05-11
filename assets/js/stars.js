@@ -1,6 +1,6 @@
 const starfield = document.getElementById('starfield');
 
-for (let i = 0; i < 200; i++) {
+for (let i = 0; i < 180; i++) {
   const star = document.createElement('div');
   star.className = 'star';
 
