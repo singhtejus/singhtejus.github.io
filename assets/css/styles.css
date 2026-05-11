@@ -113,8 +113,7 @@ main {
 }
 
 .bio,
-.resume,
-.bio-pane {
+.resume {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -131,8 +130,7 @@ main {
 
 @media (prefers-color-scheme: dark) {
   .bio,
-  .resume,
-  .bio-pane {
+  .resume {
     box-shadow:
       inset 1px 1px 0 var(--glass-edge),
       0 6px 18px var(--glass-shadow);
@@ -142,38 +140,27 @@ main {
 .bio,
 .resume {
   margin-top: 24px;
-  padding: 28px;
-}
-
-.bio {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.bio-pane {
-  padding: 18px 24px 22px;
+  padding: 24px 28px;
 }
 
 .bio::before,
 .resume::before,
 .bio::after,
-.resume::after,
-.bio-pane::before,
-.bio-pane::after {
+.resume::after {
   display: none;
 }
 
 .bio-title,
 .section-title {
-  margin: 0 0 12px 0;
-  text-align: center;
-  font-size: 1.25rem;
-  font-weight: 700;
+  margin: 0 0 4px 0;
+  text-align: left;
+  font-size: 1.1rem;
+  font-weight: 400;
 }
 
 .bio p {
-  margin-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 18px;
   font-size: 1.08rem;
   text-align: justify;
 }
@@ -187,15 +174,15 @@ main {
 }
 
 .resume-link {
-  margin-top: 8px;
+  margin-top: 6px;
   margin-bottom: 0;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .resume-link a {
   color: inherit;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 @keyframes twinkle {
