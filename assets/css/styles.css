@@ -5,6 +5,7 @@
   --shooting-star: rgba(0, 0, 0, 0.9);
   --border: rgba(0, 0, 0, 0.14);
   --radius: 16px;
+  --glass: rgba(255, 255, 255, 0.38);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -14,6 +15,7 @@
     --star: rgba(255, 255, 255, 0.8);
     --shooting-star: rgba(255, 255, 255, 0.95);
     --border: rgba(255, 255, 255, 0.16);
+    --glass: rgba(255, 255, 255, 0.03);
   }
 }
 
@@ -108,7 +110,9 @@ main {
   padding: 28px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .bio-title,
