@@ -116,13 +116,6 @@ main {
   margin-bottom: 36px;
 }
 
-.header img {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
-  border-radius: var(--radius);
-}
-
 .header-text h1 {
   font-size: 3rem;
   margin: 0 0 12px 0;
