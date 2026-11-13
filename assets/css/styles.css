@@ -116,6 +116,14 @@ main {
   margin-bottom: 36px;
 }
 
+.profile-picture {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .header-text h1 {
   font-size: 3rem;
   margin: 0 0 12px 0;
