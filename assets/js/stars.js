@@ -1,4 +1,5 @@
 const starfield = document.getElementById('starfield');
+const starColors = ['#72aaff', '#b8334c', '#ffd77a', '#a9caff', '#edb69b'];
 
 function sizeSkyToScreen() {
   starfield.style.setProperty('--screen-height', `${window.screen.height}px`);
@@ -27,6 +28,11 @@ for (let i = 0; i < 190; i++) {
   star.style.animationDuration = `${4 + Math.random() * 8}s`;
   star.style.animationDelay = `${Math.random() * 6}s`;
 
+  const color = document.createElement('span');
+  color.className = 'star-color';
+  color.style.backgroundColor = starColors[Math.floor(Math.random() * starColors.length)];
+  star.appendChild(color);
+
   starfield.appendChild(star);
 }
 
@@ -52,3 +58,39 @@ function launchShootingStar() {
 }
 
 setTimeout(launchShootingStar, 3000);
+
+const mobileGlow = matchMedia('(hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference)');
+const stars = [...starfield.querySelectorAll('.star')];
+const panels = document.querySelectorAll('.floating-nav, .picture-frame, .silver-region, .previous-experiences > li, .resume');
+
+function lightVisibleStars() {
+  if (!mobileGlow.matches || document.hidden) return;
+  const viewport = window.visualViewport;
+  const left = viewport?.offsetLeft ?? 0;
+  const top = viewport?.offsetTop ?? 0;
+  const right = left + (viewport?.width ?? window.innerWidth);
+  const bottom = top + (viewport?.height ?? window.innerHeight);
+  const covers = Array.from(panels, panel => panel.getBoundingClientRect());
+  const visible = stars.filter(star => {
+    const rect = star.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    return x >= left && x < right && y >= top && y < bottom &&
+      !covers.some(box => x >= box.left && x < box.right && y >= box.top && y < box.bottom);
+  });
+
+  const count = Math.round(visible.length * 0.2);
+  const lit = [];
+  for (let i = 0; i < count; i++) {
+    const index = Math.floor(Math.random() * visible.length);
+    const [star] = visible.splice(index, 1);
+    star.classList.add('is-lit');
+    lit.push(star);
+  }
+  setTimeout(() => lit.forEach(star => star.classList.remove('is-lit')), 4000);
+}
+
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(lightVisibleStars);
+  setInterval(lightVisibleStars, 9000);
+}, { once: true });

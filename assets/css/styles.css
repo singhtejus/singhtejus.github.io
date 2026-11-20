@@ -263,7 +263,17 @@ main a {
   transition: filter 1s ease;
 }
 
-.star::before {
+@media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  .star.is-lit {
+    --star-fill: radial-gradient(circle, #d2f0ff, #4678ff);
+    --star-glow: brightness(1.35) drop-shadow(0 0 4px #64c3ff) drop-shadow(0 0 9px #6ec8ff);
+    --twinkle-min: 0.75;
+    --trail-opacity: 0.6;
+  }
+}
+
+.star::before,
+.star-color {
   content: "";
   position: absolute;
   inset: 0;
@@ -282,6 +292,11 @@ main a {
   );
 }
 
+.star-color {
+  opacity: var(--star-color-opacity, 0);
+  pointer-events: none;
+}
+
 .star::after {
   content: "";
   position: absolute;
@@ -295,7 +310,7 @@ main a {
   background: linear-gradient(90deg, rgba(220, 240, 255, 0.4), rgba(171, 211, 255, 0.1) 35%, transparent);
   filter: blur(1px);
   pointer-events: none;
-  transition: opacity 1s ease;
+  transition: opacity 200ms ease;
 }
 
 .shooting-star {
@@ -505,6 +520,40 @@ main {
   background: linear-gradient(transparent, rgba(163, 205, 255, 0.35), #e4f3ff, rgba(163, 205, 255, 0.35), transparent);
   transform: translate(-50%, -50%) rotate(25deg);
   filter: blur(2px);
+  animation: quasar-jets 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes quasar-jets {
+  from { opacity: 0.65; }
+  to { opacity: 1; }
+}
+
+.quasar-flow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 150px;
+  transform: translate(-50%, -50%) rotate(25deg);
+  filter: blur(1px);
+  background-image:
+    repeating-linear-gradient(to top, transparent 0 20px, rgba(225, 241, 255, 0.45) 23px, transparent 27px),
+    repeating-linear-gradient(to bottom, transparent 0 20px, rgba(225, 241, 255, 0.45) 23px, transparent 27px);
+  background-size: 100% calc(50% + 27px);
+  background-position: center top, center bottom;
+  background-repeat: no-repeat;
+  -webkit-mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent);
+  mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent);
+  animation: quasar-flow 2s linear infinite;
+}
+
+@keyframes quasar-flow {
+  to { background-position: center -27px, center calc(100% + 27px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quasar::before, .quasar-flow { animation: none; }
+  .quasar-flow { display: none; }
 }
 
 .quasar::after {
@@ -677,7 +726,7 @@ main {
 
 @keyframes twinkle {
   0%, 100% {
-    opacity: 0.15;
+    opacity: var(--twinkle-min, 0.15);
     transform: scale(1);
   }
 

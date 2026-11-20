@@ -21,6 +21,7 @@ function updateNavigation() {
     const bounds = previousSection.getBoundingClientRect();
     const progress = Math.min(1 - bounds.top / window.innerHeight, bounds.bottom / window.innerHeight);
     previousShade.style.opacity = Math.max(0, Math.min(1, progress));
+    document.querySelector('#starfield').style.setProperty('--star-color-opacity', Math.max(0, Math.min(1, progress)));
   }
   if (resumeSection) {
     const bounds = resumeSection.getBoundingClientRect();
