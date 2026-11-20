@@ -676,6 +676,18 @@ main {
 }
 
 @media (max-width: 700px) {
+  body::before,
+  #starfield,
+  #previous-shade {
+    top: -80px;
+    height: calc(100lvh + 160px);
+  }
+
+  main {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+
   .home .bio,
   .previously {
     padding-bottom: max(160px, 30svh);

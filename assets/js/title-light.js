@@ -39,9 +39,10 @@ window.addEventListener('pointermove', (event) => {
 
     if (isTouch) return;
 
+    const fieldBounds = document.querySelector('#starfield').getBoundingClientRect();
     for (const star of pointerStars) {
-      const dx = (cursorX - star.x * window.innerWidth - star.radius) / 320;
-      const dy = (cursorY - star.y * window.innerHeight - star.radius) / 240;
+      const dx = (cursorX - fieldBounds.left - star.x * fieldBounds.width - star.radius) / 320;
+      const dy = (cursorY - fieldBounds.top - star.y * fieldBounds.height - star.radius) / 240;
       const strength = Math.max(0, 1 - Math.hypot(dx, dy));
       if (strength > 0) {
         star.element.style.setProperty('--star-fill',
