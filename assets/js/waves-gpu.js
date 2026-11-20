@@ -90,10 +90,12 @@
   catch (error) { console.warn('GPU waves unavailable:', error); return; }
   let width, height, targets = [], frame = 0, visible = false, introPresent = false, activity = 0, active = false;
   let outputWidth, outputHeight;
+  let sizeDamping = 1;
   let query = null, framesSinceCheck = 0, generation = 0, queryGeneration = 0;
   let rippleTimer, hasEntered = false;
   const drops = [];
   function resize() {
+    sizeDamping = 1 - 0.012 * (1 - Math.min(section.clientWidth / 900, 1));
     const newWidth = Math.max(2, Math.round(section.clientWidth / 8));
     const newHeight = Math.max(2, Math.round(section.clientHeight / 8));
     const newOutputWidth = Math.max(2, Math.round(section.clientWidth));
@@ -200,7 +202,7 @@
     gl.bindFramebuffer(gl.FRAMEBUFFER, targets[1].framebuffer);
     gl.viewport(0, 0, width, height);
     setup(sim, point);
-    gl.uniform1f(gl.getUniformLocation(sim, 'damping'), activity > 3 ? 0.97 : 0.995);
+    gl.uniform1f(gl.getUniformLocation(sim, 'damping'), (activity > 3 ? 0.97 : 0.995) * sizeDamping);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     targets.reverse();
     activity *= activity > 3 ? 0.97 : 0.995;

@@ -8,10 +8,12 @@ let waveFrame = 0;
 let visible = false;
 let introPresent = false;
 let waveActivity = 0;
+let sizeDamping = 1;
 let waveActive = false;
 let rippleTimer, hasEntered = false;
 
 function resizeWave() {
+  sizeDamping = 1 - 0.012 * (1 - Math.min(waveSection.clientWidth / 900, 1));
   const newWidth = Math.max(2, Math.round(waveSection.clientWidth / 8));
   const newHeight = Math.max(2, Math.round(waveSection.clientHeight / 8));
   if (newWidth === width && newHeight === height) return;
@@ -63,7 +65,7 @@ function drawWave() {
       const i = y * width + x;
       // The center and four neighbors form the five-point Laplacian.
       const laplacian = current[i - 1] + current[i + 1] + current[i - width] + current[i + width] - 4 * current[i];
-      previous[i] = (2 * current[i] - previous[i] + 0.1 * laplacian) * damping;
+      previous[i] = (2 * current[i] - previous[i] + 0.1 * laplacian) * damping * sizeDamping;
       const slopeX = current[i - 1] - current[i + 1];
       const slopeY = current[i - width] - current[i + width];
       const slope = slopeX + slopeY;

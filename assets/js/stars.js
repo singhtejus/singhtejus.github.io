@@ -76,7 +76,7 @@ function updateRays() {
     return;
   }
   const mobile = mobileGlow.matches;
-  const targetCount = mobile ? Math.round(stars.length * 0.2) : 7;
+  const targetCount = mobile ? Math.round(stars.length * 0.18) : 7;
   const glowClass = mobile ? 'is-lit' : 'ambient-lit';
   const phase = star => {
     let animation = twinkleAnimations.get(star);
