@@ -13,13 +13,7 @@ const resumeSection = document.querySelector('.home #resume');
 function updateNavigation() {
   navigationFrame = 0;
   if (intro) {
-    const bounds = intro.getBoundingClientRect();
-    const skyBounds = document.querySelector('#starfield').getBoundingClientRect();
-    wave.style.left = `${bounds.left - skyBounds.left}px`;
-    wave.style.top = `${bounds.top - skyBounds.top}px`;
-    wave.style.width = `${bounds.width}px`;
-    wave.style.height = `${bounds.height}px`;
-    const bottom = bounds.bottom;
+    const bottom = intro.getBoundingClientRect().bottom;
     navigation.hidden = bottom > window.innerHeight * 0.5;
     wave.style.opacity = Math.max(0, Math.min(1, bottom / window.innerHeight));
   }

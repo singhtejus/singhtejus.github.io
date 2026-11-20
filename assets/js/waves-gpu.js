@@ -37,35 +37,30 @@
       result = vec4(next, h, 0, 1);
     }`;
   const shade = common + `
-    uniform sampler2D grain;
     uniform ivec2 outputSize;
-    uniform vec2 grainOffset;
-    uniform bool grainReady;
     out vec4 color;
     float smoothHeight(vec2 uv) {
-      float h = texture(state, uv).r;
-      if (hasDrop) {
-        vec2 d = uv * vec2(size) - (vec2(drop) + 0.5);
-        if (abs(d.x) <= 2.5 && abs(d.y) <= 2.5) h += 1.5 * exp(-dot(d, d) / 4.0);
-      }
-      return h;
+      if (!hasDrop) return texture(state, uv).r;
+      vec2 point = uv * vec2(size) - 0.5;
+      ivec2 cell = ivec2(floor(point));
+      vec2 fraction = fract(point);
+      float bottom = mix(heightAt(cell), heightAt(cell + ivec2(1, 0)), fraction.x);
+      float top = mix(heightAt(cell + ivec2(0, 1)), heightAt(cell + ivec2(1, 1)), fraction.x);
+      return mix(bottom, top, fraction.y);
     }
     void main() {
       vec2 uv = gl_FragCoord.xy / vec2(outputSize);
-      ivec2 p = ivec2(uv * vec2(size));
-      if (p.x == 0 || p.y == 0 || p.x == size.x - 1 || p.y == size.y - 1) { color = vec4(0); return; }
       vec2 texel = 1.0 / vec2(size);
       float slopeX = smoothHeight(uv - vec2(texel.x, 0)) - smoothHeight(uv + vec2(texel.x, 0));
       float slopeY = smoothHeight(uv + vec2(0, texel.y)) - smoothHeight(uv - vec2(0, texel.y));
       float slope = slopeX + slopeY;
-      vec3 tint = slope > 0.0 ? vec3(185,225,255)/255.0 : vec3(25.0/255.0);
-      float alpha = min(95.0, abs(slope)*180.0)/255.0;
-      if (!grainReady) { color = vec4(tint * alpha, alpha); return; }
-      vec2 point = vec2(gl_FragCoord.x, float(outputSize.y) - gl_FragCoord.y) + grainOffset;
-      vec4 textureColor = texture(grain, (point + vec2(slopeX, slopeY) * 12.0) / 128.0);
-      vec3 base = vec3(21,23,26)/255.0;
-      vec3 paper = mix(base, textureColor.rgb, textureColor.a * (1.5 - 0.5 * textureColor.a));
-      color = vec4(mix(paper, tint, alpha), 1.0);
+      float magnitude = length(vec2(slopeX, slopeY));
+      float direction = slope / max(1.414214 * magnitude, 0.0001);
+      float light = smoothstep(-0.65, 0.65, direction);
+      vec3 tint = mix(vec3(25.0), vec3(185,225,255), light) / 255.0;
+      float strength = max(abs(slope), magnitude * 0.35);
+      float alpha = min(95.0, strength * 180.0) / 255.0;
+      color = vec4(tint * alpha, alpha);
     }`;
   const detect = common + `
     out vec4 color;
@@ -93,28 +88,8 @@
   let sim, display, detection;
   try { sim = makeProgram(simulate); display = makeProgram(shade); detection = makeProgram(detect); }
   catch (error) { console.warn('GPU waves unavailable:', error); return; }
-  const grain = gl.createTexture();
-  let grainReady = false;
-  gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, grain);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
-  gl.activeTexture(gl.TEXTURE0);
-  const grainImage = new Image();
-  grainImage.onload = () => {
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, grain);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, grainImage);
-    gl.activeTexture(gl.TEXTURE0);
-    grainReady = true;
-  };
-  grainImage.src = 'assets/images/background-grain.png';
   let width, height, targets = [], frame = 0, visible = false, introPresent = false, activity = 0, active = false;
   let outputWidth, outputHeight;
-  let starSamples, lastStarUpdate = 0;
   let query = null, framesSinceCheck = 0, generation = 0, queryGeneration = 0;
   let rippleTimer, hasEntered = false;
   const drops = [];
@@ -127,8 +102,6 @@
     targets.forEach(({ texture, framebuffer }) => { gl.deleteTexture(texture); gl.deleteFramebuffer(framebuffer); });
     width = newWidth;
     height = newHeight;
-    starSamples = new Float32Array(width * height * 4);
-    window.starRipples.clear();
     outputWidth = canvas.width = newOutputWidth;
     outputHeight = canvas.height = newOutputHeight;
     targets = Array.from({ length: 2 }, () => {
@@ -136,6 +109,8 @@
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, width, height);
       const framebuffer = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
@@ -154,7 +129,6 @@
   }
   try { resize(); } catch (error) { console.warn('GPU waves unavailable:', error); return; }
   window.waveGPU = true;
-  canvas.classList.add('paper-surface');
   function start() {
     if (!frame && visible && !motion.matches && !document.hidden && active) frame = requestAnimationFrame(draw);
   }
@@ -202,7 +176,6 @@
         gl.clear(gl.COLOR_BUFFER_BIT);
         activity = 0;
         active = false;
-        window.starRipples.clear();
         if (introPresent && !motion.matches && !document.hidden) randomRipple();
         return;
       }
@@ -222,26 +195,13 @@
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, outputWidth, outputHeight);
     setup(display, point);
-    const skyBounds = document.querySelector('#starfield').getBoundingClientRect();
-    const sectionBounds = section.getBoundingClientRect();
     gl.uniform2i(gl.getUniformLocation(display, 'outputSize'), outputWidth, outputHeight);
-    gl.uniform2f(gl.getUniformLocation(display, 'grainOffset'), sectionBounds.left - skyBounds.left, sectionBounds.top - skyBounds.top);
-    gl.uniform1i(gl.getUniformLocation(display, 'grainReady'), grainReady ? 1 : 0);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, grain);
-    gl.uniform1i(gl.getUniformLocation(display, 'grain'), 1);
-    gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindFramebuffer(gl.FRAMEBUFFER, targets[1].framebuffer);
     gl.viewport(0, 0, width, height);
     setup(sim, point);
     gl.uniform1f(gl.getUniformLocation(sim, 'damping'), activity > 3 ? 0.97 : 0.995);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    if (performance.now() - lastStarUpdate >= 180) {
-      lastStarUpdate = performance.now();
-      gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, starSamples);
-      window.starRipples.update(width, height, (x, y) => starSamples[(y * width + x) * 4], true);
-    }
     targets.reverse();
     activity *= activity > 3 ? 0.97 : 0.995;
     start();
@@ -256,19 +216,16 @@
     if (introPresent && !active && !motion.matches && !document.hidden) randomRipple();
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) window.starRipples.clear();
     scheduleRipple();
     start();
   });
   motion.addEventListener('change', () => {
-    if (motion.matches) window.starRipples.clear();
     if (introPresent && !active && !motion.matches && !document.hidden) randomRipple();
     else { scheduleRipple(); start(); }
   });
   new IntersectionObserver(([entry]) => {
     const wasPresent = introPresent;
     visible = entry.isIntersecting && entry.intersectionRatio > 0;
-    if (!visible) window.starRipples.clear();
     introPresent = entry.intersectionRatio >= 0.5;
     if (introPresent && !wasPresent) {
       if ((hasEntered || !active) && !motion.matches && !document.hidden) randomRipple();

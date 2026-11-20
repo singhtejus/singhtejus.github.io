@@ -10,7 +10,6 @@ let introPresent = false;
 let waveActivity = 0;
 let waveActive = false;
 let rippleTimer, hasEntered = false;
-let lastStarUpdate = 0;
 
 function resizeWave() {
   const newWidth = Math.max(2, Math.round(waveSection.clientWidth / 8));
@@ -25,7 +24,6 @@ function resizeWave() {
   pixels = waveContext.createImageData(width, height);
   waveActivity = 0;
   waveActive = false;
-  window.starRipples.clear();
 }
 
 function disturbWave(x, y) {
@@ -66,22 +64,33 @@ function drawWave() {
       // The center and four neighbors form the five-point Laplacian.
       const laplacian = current[i - 1] + current[i + 1] + current[i - width] + current[i + width] - 4 * current[i];
       previous[i] = (2 * current[i] - previous[i] + 0.1 * laplacian) * damping;
-      const slope = current[i - 1] - current[i + 1] + current[i - width] - current[i + width];
+      const slopeX = current[i - 1] - current[i + 1];
+      const slopeY = current[i - width] - current[i + width];
+      const slope = slopeX + slopeY;
       strongestSlope = Math.max(strongestSlope, Math.abs(slope));
-      const alpha = Math.min(95, Math.abs(slope) * 180);
+      const magnitude = Math.hypot(slopeX, slopeY);
+      const strength = Math.max(Math.abs(slope), magnitude * 0.35);
+      const alpha = Math.min(95, strength * 180);
+      const direction = slope / Math.max(Math.SQRT2 * magnitude, 0.0001);
+      const blend = Math.max(0, Math.min(1, (direction + 0.65) / 1.3));
+      const light = blend * blend * (3 - 2 * blend);
       const p = i * 4;
-      pixels.data[p] = slope > 0 ? 185 : 25;
-      pixels.data[p + 1] = slope > 0 ? 225 : 25;
-      pixels.data[p + 2] = slope > 0 ? 255 : 25;
+      pixels.data[p] = 25 + 160 * light;
+      pixels.data[p + 1] = 25 + 200 * light;
+      pixels.data[p + 2] = 25 + 230 * light;
       pixels.data[p + 3] = alpha;
     }
   }
   [current, previous] = [previous, current];
-  waveContext.putImageData(pixels, 0, 0);
-  if (performance.now() - lastStarUpdate >= 180) {
-    lastStarUpdate = performance.now();
-    window.starRipples.update(width, height, (x, y) => current[y * width + x], false);
+  // Extend the rendered edge without changing the simulation's fixed boundary.
+  for (let y = 1; y < height - 1; y++) {
+    const row = y * width * 4;
+    pixels.data.copyWithin(row, row + 4, row + 8);
+    pixels.data.copyWithin(row + (width - 1) * 4, row + (width - 2) * 4, row + (width - 1) * 4);
   }
+  pixels.data.copyWithin(0, width * 4, width * 8);
+  pixels.data.copyWithin((height - 1) * width * 4, (height - 2) * width * 4, (height - 1) * width * 4);
+  waveContext.putImageData(pixels, 0, 0);
   waveFrame = 0;
   if (strongestSlope > 0.006) {
     waveFrame = requestAnimationFrame(drawWave);
@@ -91,7 +100,6 @@ function drawWave() {
     previous.fill(0);
     waveActivity = 0;
     waveActive = false;
-    window.starRipples.clear();
     if (introPresent && !reducedMotion.matches && !document.hidden) randomRipple();
   }
 }
@@ -114,19 +122,16 @@ window.addEventListener('resize', () => {
   if (introPresent && !waveActive && !reducedMotion.matches && !document.hidden) randomRipple();
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) window.starRipples.clear();
   scheduleRipple();
   updateWave();
 });
 reducedMotion.addEventListener('change', () => {
-  if (reducedMotion.matches) window.starRipples.clear();
   if (introPresent && !waveActive && !reducedMotion.matches && !document.hidden) randomRipple();
   else { scheduleRipple(); updateWave(); }
 });
 new IntersectionObserver(([entry]) => {
   const wasPresent = introPresent;
   visible = entry.isIntersecting && entry.intersectionRatio > 0;
-  if (!visible) window.starRipples.clear();
   introPresent = entry.intersectionRatio >= 0.5;
   if (introPresent && !wasPresent) {
     if ((hasEntered || !waveActive) && !reducedMotion.matches && !document.hidden) randomRipple();

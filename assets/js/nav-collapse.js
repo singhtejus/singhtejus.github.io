@@ -1,9 +1,12 @@
 const floatingNav = document.querySelector('.floating-nav');
 const navReveal = floatingNav.querySelector('.nav-reveal');
 let navTimer;
+let hasScrolledDown = false;
+let lastScrollY = window.scrollY;
 
 function scheduleNavCollapse() {
   clearTimeout(navTimer);
+  if (!hasScrolledDown) return;
   navTimer = setTimeout(() => {
     const hovered = window.matchMedia('(hover: hover)').matches && floatingNav.matches(':hover');
     if (!hovered && !floatingNav.contains(document.activeElement)) {
@@ -33,4 +36,16 @@ navReveal.addEventListener('click', () => {
   expandNav();
   floatingNav.querySelector('a').focus();
 });
-scheduleNavCollapse();
+
+window.addEventListener('scroll', () => {
+  const scrollingDown = window.scrollY > lastScrollY;
+  lastScrollY = window.scrollY;
+  if (!hasScrolledDown && scrollingDown) {
+    requestAnimationFrame(() => {
+      if (!hasScrolledDown && !floatingNav.hidden) {
+        hasScrolledDown = true;
+        scheduleNavCollapse();
+      }
+    });
+  }
+}, { passive: true });
