@@ -1,5 +1,19 @@
 const starfield = document.getElementById('starfield');
 
+function sizeSkyToScreen() {
+  starfield.style.setProperty('--screen-height', `${window.screen.height}px`);
+}
+
+sizeSkyToScreen();
+window.addEventListener('resize', sizeSkyToScreen);
+
+// At the very top of the document Safari can only extend its fallback color.
+// Start inside the painted area, respecting deep links and restored positions.
+const skyMargin = parseFloat(getComputedStyle(document.body).getPropertyValue('--sky-margin'));
+if (skyMargin && !location.hash && window.scrollY === 0) {
+  window.scrollTo({ top: skyMargin, behavior: 'instant' });
+}
+
 for (let i = 0; i < 190; i++) {
   const star = document.createElement('div');
   star.className = 'star';

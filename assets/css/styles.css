@@ -215,6 +215,38 @@ main a {
     /* Keep the extra paint area stable as the browser controls collapse. */
     --sky-bleed: max(96px, env(safe-area-max-inset-top, 0px), env(safe-area-max-inset-bottom, 0px));
   }
+
+  @supports (animation-timeline: scroll(root)) and (animation-range: 0px 100cqh) {
+    body {
+      /* Leave actual page content above the intro for Safari to show behind its bars. */
+      --sky-margin: 96px;
+      padding-top: var(--sky-margin);
+      min-height: calc(100lvh + 2 * var(--sky-margin));
+    }
+
+    .sky-anchor {
+      position: absolute;
+      inset: 0;
+      width: auto;
+      height: auto;
+      container-type: size;
+      overflow: clip;
+    }
+
+    #starfield {
+      --sky-bleed: var(--sky-margin);
+      height: calc(var(--screen-height, 100lvh) + 2 * var(--sky-bleed));
+      /* Counter each pixel of native scroll on the same timeline as the page. */
+      animation: pin-sky linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0px 100cqh;
+    }
+  }
+}
+
+@keyframes pin-sky {
+  from { transform: translateY(0); }
+  to { transform: translateY(100cqh); }
 }
 
 #previous-shade {
