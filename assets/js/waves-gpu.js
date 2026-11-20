@@ -76,9 +76,12 @@
   let query = null, framesSinceCheck = 0, generation = 0, queryGeneration = 0;
   const drops = [];
   function resize() {
+    const newWidth = Math.max(2, Math.round(section.clientWidth / 8));
+    const newHeight = Math.max(2, Math.round(section.clientHeight / 8));
+    if (newWidth === width && newHeight === height) return;
     targets.forEach(({ texture, framebuffer }) => { gl.deleteTexture(texture); gl.deleteFramebuffer(framebuffer); });
-    width = Math.max(2, Math.round(section.clientWidth / 8));
-    height = Math.max(2, Math.round(section.clientHeight / 8));
+    width = newWidth;
+    height = newHeight;
     canvas.width = width;
     canvas.height = height;
     targets = Array.from({ length: 2 }, () => {

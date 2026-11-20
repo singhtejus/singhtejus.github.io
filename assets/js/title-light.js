@@ -26,6 +26,7 @@ function clearTitleLight() {
 
 window.addEventListener('pointermove', (event) => {
   if (event.pointerType === 'touch' && !event.target.closest('.header-text h1')) return;
+  const isTouch = event.pointerType === 'touch';
   cursorX = event.clientX;
   cursorY = event.clientY;
   if (lightFrame) return;
@@ -35,6 +36,8 @@ window.addEventListener('pointermove', (event) => {
     const bounds = title.getBoundingClientRect();
     title.style.setProperty('--light-x', `${cursorX - bounds.left}px`);
     title.style.setProperty('--light-y', `${cursorY - bounds.top}px`);
+
+    if (isTouch) return;
 
     for (const star of pointerStars) {
       const dx = (cursorX - star.x * window.innerWidth - star.radius) / 320;

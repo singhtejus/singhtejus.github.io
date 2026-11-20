@@ -22,6 +22,7 @@
 
 html {
   scroll-snap-type: y mandatory;
+  overscroll-behavior-y: none;
 }
 
 html.resume-scrolling {
@@ -36,6 +37,7 @@ html.resume-scrolling {
 
 .home > section {
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .home #about-me,
@@ -57,7 +59,11 @@ body {
 body::before {
   content: "";
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
   z-index: 0;
   pointer-events: none;
   background: url("../images/background-grain.png"), url("../images/background-grain.png"), var(--background);
@@ -85,7 +91,8 @@ main a {
   isolation: isolate;
   overflow: hidden;
   border: 1px solid rgba(220, 235, 245, 0.16);
-  border-radius: 16px;
+  border-radius: 12px;
+  clip-path: url("#nav-squircle");
   background: url("../images/background-grain.png"), linear-gradient(145deg, rgba(77, 86, 95, 0.65), rgba(38, 45, 52, 0.72));
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
   backdrop-filter: blur(14px) saturate(1.2);
@@ -103,7 +110,7 @@ main a {
   padding-inline: 0;
   border-color: transparent;
   border-radius: 10px;
-  background: url("../images/background-grain.png"), rgba(29, 54, 79, 0.9);
+  background: url("../images/background-grain.png"), rgba(29, 54, 79, 0.68);
   transform: scaleY(0.3);
 }
 
@@ -122,12 +129,14 @@ main a {
   opacity: 0;
   position: absolute;
   inset: 0;
+  z-index: 2;
   width: 100%;
   border: 0;
   border-radius: inherit;
   background: transparent;
   color: rgba(234, 244, 255, 0.9);
-  font: italic 9px cursive;
+  font: italic 10px/1 "Apple Chancery", "Segoe Script", cursive;
+  letter-spacing: 0.04em;
   cursor: pointer;
   pointer-events: none;
   transition: opacity 160ms ease, visibility 0s linear 160ms;
@@ -194,7 +203,11 @@ main a {
 
 #starfield {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
@@ -659,6 +672,11 @@ main {
 }
 
 @media (max-width: 700px) {
+  .home .bio,
+  .previously {
+    padding-bottom: max(160px, 30svh);
+  }
+
   .bio-intro {
     gap: 16px;
   }

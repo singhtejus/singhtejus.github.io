@@ -10,8 +10,11 @@ let introPresent = false;
 let waveActivity = 0;
 
 function resizeWave() {
-  width = Math.max(2, Math.round(waveSection.clientWidth / 8));
-  height = Math.max(2, Math.round(waveSection.clientHeight / 8));
+  const newWidth = Math.max(2, Math.round(waveSection.clientWidth / 8));
+  const newHeight = Math.max(2, Math.round(waveSection.clientHeight / 8));
+  if (newWidth === width && newHeight === height) return;
+  width = newWidth;
+  height = newHeight;
   waveCanvas.width = width;
   waveCanvas.height = height;
   current = new Float32Array(width * height);

@@ -19,8 +19,12 @@ function expandNav() {
   navReveal.setAttribute('aria-expanded', 'true');
 }
 
-floatingNav.addEventListener('mouseenter', expandNav);
-floatingNav.addEventListener('mouseleave', scheduleNavCollapse);
+floatingNav.addEventListener('mouseenter', () => {
+  if (window.matchMedia('(hover: hover)').matches) expandNav();
+});
+floatingNav.addEventListener('mouseleave', () => {
+  if (window.matchMedia('(hover: hover)').matches) scheduleNavCollapse();
+});
 floatingNav.addEventListener('focusin', (event) => {
   if (event.target !== navReveal) expandNav();
 });
