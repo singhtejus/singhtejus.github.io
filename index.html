@@ -26,8 +26,11 @@
       </filter>
     </defs>
   </svg>
-  <div id="previous-shade" aria-hidden="true"></div>
-  <div id="starfield"></div>
+  <div class="sky-anchor" aria-hidden="true">
+    <div id="starfield">
+      <div id="previous-shade"></div>
+    </div>
+  </div>
 
   <nav class="floating-nav" aria-label="Main navigation">
     <button class="nav-reveal" type="button" aria-label="Show navigation" aria-expanded="false"><span>Navigation</span></button>
@@ -116,7 +119,6 @@
   </main>
 
   <script src="assets/js/stars.js"></script>
-  <script src="assets/js/background-scroll.js"></script>
   <script src="assets/js/waves-gpu.js"></script>
   <script>
     if (!window.waveGPU) {
