@@ -234,6 +234,7 @@ main a {
   position: absolute;
   filter: var(--star-glow, none);
   animation: twinkle ease-in-out infinite;
+  transition: filter 1s ease;
 }
 
 .star::before {
@@ -268,6 +269,7 @@ main a {
   background: linear-gradient(90deg, rgba(220, 240, 255, 0.4), rgba(171, 211, 255, 0.1) 35%, transparent);
   filter: blur(1px);
   pointer-events: none;
+  transition: opacity 1s ease;
 }
 
 .shooting-star {
@@ -679,8 +681,10 @@ main {
   body::before,
   #starfield,
   #previous-shade {
+    position: absolute;
     top: -80px;
     height: calc(100lvh + 160px);
+    transform: translate3d(0, var(--background-scroll, 0px), 0);
   }
 
   main {
