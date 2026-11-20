@@ -61,36 +61,66 @@ setTimeout(launchShootingStar, 3000);
 
 const mobileGlow = matchMedia('(hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference)');
 const stars = [...starfield.querySelectorAll('.star')];
-const panels = document.querySelectorAll('.floating-nav, .picture-frame, .silver-region, .previous-experiences > li, .resume');
+const desktopGlow = matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
+const risingRayStars = new Set();
+const fadingRayStars = new Set();
+const coolingRayStars = new Map();
+const twinkleAnimations = new WeakMap();
 
-function lightVisibleStars() {
-  if (!mobileGlow.matches || document.hidden) return;
-  const viewport = window.visualViewport;
-  const left = viewport?.offsetLeft ?? 0;
-  const top = viewport?.offsetTop ?? 0;
-  const right = left + (viewport?.width ?? window.innerWidth);
-  const bottom = top + (viewport?.height ?? window.innerHeight);
-  const covers = Array.from(panels, panel => panel.getBoundingClientRect());
-  const visible = stars.filter(star => {
-    const rect = star.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    return x >= left && x < right && y >= top && y < bottom &&
-      !covers.some(box => x >= box.left && x < box.right && y >= box.top && y < box.bottom);
-  });
-
-  const count = Math.round(visible.length * 0.2);
-  const lit = [];
-  for (let i = 0; i < count; i++) {
-    const index = Math.floor(Math.random() * visible.length);
-    const [star] = visible.splice(index, 1);
-    star.classList.add('is-lit');
-    lit.push(star);
+function updateRays() {
+  if ((!desktopGlow.matches && !mobileGlow.matches) || document.hidden) {
+    for (const star of [...risingRayStars, ...fadingRayStars]) star.classList.remove('ambient-lit', 'is-lit');
+    risingRayStars.clear();
+    fadingRayStars.clear();
+    coolingRayStars.clear();
+    return;
   }
-  setTimeout(() => lit.forEach(star => star.classList.remove('is-lit')), 4000);
+  const mobile = mobileGlow.matches;
+  const targetCount = mobile ? Math.round(stars.length * 0.2) : 7;
+  const glowClass = mobile ? 'is-lit' : 'ambient-lit';
+  const phase = star => {
+    let animation = twinkleAnimations.get(star);
+    if (!animation) {
+      animation = star.getAnimations().find(item => item.animationName === 'twinkle');
+      if (animation) twinkleAnimations.set(star, animation);
+    }
+    return animation?.effect?.getComputedTiming().progress;
+  };
+  for (const star of risingRayStars) {
+    const progress = phase(star);
+    if (progress == null || progress >= 0.5) {
+      risingRayStars.delete(star);
+      fadingRayStars.add(star);
+    }
+  }
+  for (const star of fadingRayStars) {
+    const progress = phase(star);
+    if (progress == null || progress >= 0.7 || progress < 0.5) {
+      star.classList.remove('ambient-lit', 'is-lit');
+      fadingRayStars.delete(star);
+      coolingRayStars.set(star, performance.now() + 1000);
+    }
+  }
+  for (const [star, until] of coolingRayStars) {
+    if (performance.now() >= until) coolingRayStars.delete(star);
+  }
+  if (risingRayStars.size + fadingRayStars.size + coolingRayStars.size >= targetCount) return;
+  const candidates = stars.filter(star => {
+    if (risingRayStars.has(star) || fadingRayStars.has(star) || coolingRayStars.has(star)) return false;
+    const progress = phase(star);
+    if (progress == null || progress >= 0.35) return false;
+    if (mobile) return true;
+    const rect = star.getBoundingClientRect();
+    return rect.right > 0 && rect.left < window.innerWidth && rect.bottom > 0 && rect.top < window.innerHeight;
+  });
+  while (risingRayStars.size + fadingRayStars.size + coolingRayStars.size < targetCount && candidates.length) {
+    const [star] = candidates.splice(Math.floor(Math.random() * candidates.length), 1);
+    star.classList.add(glowClass);
+    risingRayStars.add(star);
+  }
 }
 
 window.addEventListener('pageshow', () => {
-  requestAnimationFrame(lightVisibleStars);
-  setInterval(lightVisibleStars, 9000);
+  requestAnimationFrame(updateRays);
+  setInterval(updateRays, 250);
 }, { once: true });

@@ -1,5 +1,4 @@
 const title = document.querySelector('.header-text h1');
-const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
 const pointerStars = [...document.querySelectorAll('.star')].map((element) => ({
   element,
   x: parseFloat(element.style.left) / 100,
@@ -21,6 +20,7 @@ function clearTitleLight() {
     star.style.removeProperty('--star-fill');
     star.style.removeProperty('--star-glow');
     star.style.removeProperty('--trail-opacity');
+    star.classList.remove('has-light');
   }
   highlightedStars.clear();
 }
@@ -36,16 +36,19 @@ function highlightStars(x, y) {
         `radial-gradient(circle, rgba(${255 - strength * 45}, ${255 - strength * 15}, 255, ${0.8 + strength * 0.2}), rgba(${255 - strength * 185}, ${255 - strength * 90}, 255, ${0.8 + strength * 0.15}))`);
       star.element.style.setProperty('--star-glow',
         `brightness(${1 + strength * 0.35}) drop-shadow(0 0 4px rgba(100, 195, 255, ${strength})) drop-shadow(0 0 9px rgba(110, 200, 255, ${strength * 0.9}))`);
-      if (star.trailSample < (desktopPointer.matches ? 0.3 : 0.25)) {
+      if (star.trailSample < 0.23) {
         star.element.style.setProperty('--trail-opacity', strength * 0.6);
+        star.element.classList.add('has-light');
       } else {
         star.element.style.removeProperty('--trail-opacity');
+        star.element.classList.remove('has-light');
       }
       highlightedStars.add(star.element);
     } else if (highlightedStars.delete(star.element)) {
       star.element.style.removeProperty('--star-fill');
       star.element.style.removeProperty('--star-glow');
       star.element.style.removeProperty('--trail-opacity');
+      star.element.classList.remove('has-light');
     }
   }
 }

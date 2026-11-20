@@ -28,12 +28,13 @@
   </svg>
   <div class="sky-anchor" aria-hidden="true">
     <div id="starfield">
+      <canvas class="wave" aria-hidden="true"></canvas>
       <div id="previous-shade"></div>
     </div>
   </div>
 
-  <nav class="floating-nav" aria-label="Main navigation">
-    <button class="nav-reveal" type="button" aria-label="Show navigation" aria-expanded="false"><span>Navigation</span></button>
+  <nav class="floating-nav" aria-label="Main navigation" hidden>
+    <button class="nav-reveal" type="button" aria-label="Show navigation" aria-expanded="false"><span aria-hidden="true"></span></button>
     <a href="#about-me">About me</a>
     <a href="research.html">Research</a>
     <a href="#resume">Resume</a>
@@ -41,7 +42,6 @@
 
   <main class="home">
     <section class="header">
-      <canvas class="wave" aria-hidden="true"></canvas>
       <div class="header-text">
         <h1>Hi I'm Tejus Singh</h1>
         <p>Researcher, student, and engineer.</p>
@@ -50,7 +50,7 @@
     </section>
 
     <section class="bio" id="about-me">
-      <div class="quasar" aria-hidden="true"><span class="quasar-flow"></span></div>
+      <div class="quasar" aria-hidden="true"></div>
       <div class="bio-intro">
         <div class="picture-frame">
           <img class="profile-picture" src="assets/images/tejus-pic.png" alt="Tejus Singh">
@@ -119,6 +119,7 @@
   </main>
 
   <script src="assets/js/stars.js"></script>
+  <script src="assets/js/star-ripples.js"></script>
   <script src="assets/js/waves-gpu.js"></script>
   <script>
     if (!window.waveGPU) {

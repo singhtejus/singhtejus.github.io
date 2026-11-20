@@ -8,6 +8,9 @@ let waveFrame = 0;
 let visible = false;
 let introPresent = false;
 let waveActivity = 0;
+let waveActive = false;
+let rippleTimer, hasEntered = false;
+let lastStarUpdate = 0;
 
 function resizeWave() {
   const newWidth = Math.max(2, Math.round(waveSection.clientWidth / 8));
@@ -21,10 +24,13 @@ function resizeWave() {
   previous = new Float32Array(width * height);
   pixels = waveContext.createImageData(width, height);
   waveActivity = 0;
+  waveActive = false;
+  window.starRipples.clear();
 }
 
 function disturbWave(x, y) {
   waveActivity += 1;
+  waveActive = true;
   for (let dy = -2; dy <= 2; dy++) {
     for (let dx = -2; dx <= 2; dx++) {
       const px = x + dx;
@@ -33,6 +39,20 @@ function disturbWave(x, y) {
         current[py * width + px] += 1.5 * Math.exp(-(dx * dx + dy * dy) / 4);
       }
     }
+  }
+  scheduleRipple();
+}
+
+function randomRipple() {
+  disturbWave(Math.floor(width * (0.2 + Math.random() * 0.6)),
+    Math.floor(height * (0.2 + Math.random() * 0.6)));
+  if (!waveFrame) updateWave();
+}
+
+function scheduleRipple() {
+  clearTimeout(rippleTimer);
+  if (introPresent && !reducedMotion.matches && !document.hidden) {
+    rippleTimer = setTimeout(randomRipple, 30000);
   }
 }
 
@@ -58,6 +78,10 @@ function drawWave() {
   }
   [current, previous] = [previous, current];
   waveContext.putImageData(pixels, 0, 0);
+  if (performance.now() - lastStarUpdate >= 180) {
+    lastStarUpdate = performance.now();
+    window.starRipples.update(width, height, (x, y) => current[y * width + x], false);
+  }
   waveFrame = 0;
   if (strongestSlope > 0.006) {
     waveFrame = requestAnimationFrame(drawWave);
@@ -66,13 +90,16 @@ function drawWave() {
     current.fill(0);
     previous.fill(0);
     waveActivity = 0;
+    waveActive = false;
+    window.starRipples.clear();
+    if (introPresent && !reducedMotion.matches && !document.hidden) randomRipple();
   }
 }
 
 function updateWave() {
   cancelAnimationFrame(waveFrame);
   waveFrame = 0;
-  if (visible && !reducedMotion.matches) waveFrame = requestAnimationFrame(drawWave);
+  if (visible && waveActive && !reducedMotion.matches && !document.hidden) waveFrame = requestAnimationFrame(drawWave);
 }
 
 waveSection.addEventListener('click', (event) => {
@@ -82,20 +109,34 @@ waveSection.addEventListener('click', (event) => {
     Math.floor((event.clientY - bounds.top) / bounds.height * height));
   if (!waveFrame) updateWave();
 });
-setInterval(() => {
-  if (!introPresent || waveFrame || reducedMotion.matches || document.hidden) return;
-  disturbWave(Math.floor(width * (0.2 + Math.random() * 0.6)),
-    Math.floor(height * (0.2 + Math.random() * 0.6)));
-  if (!waveFrame) updateWave();
-}, 30000);
-window.addEventListener('resize', resizeWave);
-reducedMotion.addEventListener('change', updateWave);
+window.addEventListener('resize', () => {
+  resizeWave();
+  if (introPresent && !waveActive && !reducedMotion.matches && !document.hidden) randomRipple();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) window.starRipples.clear();
+  scheduleRipple();
+  updateWave();
+});
+reducedMotion.addEventListener('change', () => {
+  if (reducedMotion.matches) window.starRipples.clear();
+  if (introPresent && !waveActive && !reducedMotion.matches && !document.hidden) randomRipple();
+  else { scheduleRipple(); updateWave(); }
+});
 new IntersectionObserver(([entry]) => {
+  const wasPresent = introPresent;
   visible = entry.isIntersecting && entry.intersectionRatio > 0;
+  if (!visible) window.starRipples.clear();
   introPresent = entry.intersectionRatio >= 0.5;
+  if (introPresent && !wasPresent) {
+    if ((hasEntered || !waveActive) && !reducedMotion.matches && !document.hidden) randomRipple();
+    else scheduleRipple();
+    hasEntered = true;
+  } else if (!introPresent) {
+    clearTimeout(rippleTimer);
+  }
   updateWave();
 }, { threshold: [0, 0.5] }).observe(waveSection);
 resizeWave();
-disturbWave(Math.floor(width * (0.2 + Math.random() * 0.6)), Math.floor(height * (0.2 + Math.random() * 0.6)));
-updateWave();
+if (!reducedMotion.matches) randomRipple();
 }
