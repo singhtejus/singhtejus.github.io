@@ -59,6 +59,7 @@ body {
 /* A full-width fixed box can make Safari paint a solid strip behind its bars. */
 .sky-anchor {
   position: fixed;
+  overflow-anchor: none;
   top: 0;
   left: 0;
   width: 0;
@@ -273,8 +274,8 @@ main a {
 
 @media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference) {
   .star.is-lit {
-    --star-fill: radial-gradient(circle, #d2f0ff, #4678ff);
-    --star-glow: brightness(1.35) drop-shadow(0 0 4px #64c3ff) drop-shadow(0 0 9px #6ec8ff);
+    --star-fill: radial-gradient(circle, #e1f3f0, #648bdc);
+    --star-glow: brightness(1.35) drop-shadow(0 0 4px #80c9e7) drop-shadow(0 0 9px #8acde8);
     --twinkle-min: 0.75;
     --trail-opacity: 0.6;
   }
@@ -282,8 +283,8 @@ main a {
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .star.ambient-lit {
-    --star-fill: radial-gradient(circle, #d2f0ff, #4678ff);
-    --star-glow: brightness(1.35) drop-shadow(0 0 4px #64c3ff) drop-shadow(0 0 9px #6ec8ff);
+    --star-fill: radial-gradient(circle, #e1f3f0, #648bdc);
+    --star-glow: brightness(1.35) drop-shadow(0 0 4px #80c9e7) drop-shadow(0 0 9px #8acde8);
     --twinkle-min: 0.75;
     --trail-opacity: 0.6;
   }
@@ -324,7 +325,7 @@ main a {
   opacity: var(--trail-opacity, 0);
   transform: translateY(-50%) rotate(25deg);
   transform-origin: left center;
-  background: linear-gradient(90deg, rgba(220, 240, 255, 0.4), rgba(171, 211, 255, 0.1) 35%, transparent);
+  background: linear-gradient(90deg, rgba(232, 242, 240, 0.4), rgba(190, 218, 235, 0.1) 35%, transparent);
   filter: blur(1px);
   pointer-events: none;
   transition: opacity 1s ease;
@@ -747,7 +748,7 @@ main {
   }
 
   10% {
-    opacity: 1;
+    opacity: var(--shooting-visibility, 1);
   }
 
   100% {

@@ -47,9 +47,9 @@ function highlightStars(x, y, fieldBounds) {
     const strength = Math.abs(dx) >= 1 || Math.abs(dy) >= 1 ? 0 : Math.max(0, 1 - Math.hypot(dx, dy));
     if (strength > 0) {
       star.element.style.setProperty('--star-fill',
-        `radial-gradient(circle, rgba(${255 - strength * 45}, ${255 - strength * 15}, 255, ${0.8 + strength * 0.2}), rgba(${255 - strength * 185}, ${255 - strength * 90}, 255, ${0.8 + strength * 0.15}))`);
+        `radial-gradient(circle, rgba(${255 - strength * 30}, ${255 - strength * 12}, ${255 - strength * 15}, ${0.8 + strength * 0.2}), rgba(${255 - strength * 155}, ${255 - strength * 75}, ${255 - strength * 35}, ${0.8 + strength * 0.15}))`);
       star.element.style.setProperty('--star-glow',
-        `brightness(${1 + strength * 0.35}) drop-shadow(0 0 4px rgba(100, 195, 255, ${strength})) drop-shadow(0 0 9px rgba(110, 200, 255, ${strength * 0.9}))`);
+        `brightness(${1 + strength * 0.35}) drop-shadow(0 0 4px rgba(128, 201, 231, ${strength})) drop-shadow(0 0 9px rgba(138, 205, 232, ${strength * 0.9}))`);
       if (star.trailSample < 0.23) {
         star.element.style.setProperty('--trail-opacity', strength * 0.6);
         star.element.classList.add('has-light');

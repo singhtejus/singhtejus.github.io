@@ -23,6 +23,7 @@ function updateNavigation() {
     const progress = Math.min(1 - bounds.top / window.innerHeight, bounds.bottom / window.innerHeight);
     const visible = Math.max(0, Math.min(1, progress));
     if (constellationLayer) constellationLayer.style.opacity = visible;
+    shootingStar.style.setProperty('--shooting-visibility', 1 - visible);
     shade = visible * 0.3;
   }
   if (previousSection) {

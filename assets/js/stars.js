@@ -45,13 +45,16 @@ shootingStar.addEventListener('animationend', () => {
 });
 
 function launchShootingStar() {
-  const startTop = Math.random() * 55;
-  const startLeft = -200 - Math.random() * 200;
+  const visibility = shootingStar.style.getPropertyValue('--shooting-visibility');
+  if (!visibility || Number(visibility) > 0.5) {
+    const startTop = Math.random() * 55;
+    const startLeft = -200 - Math.random() * 200;
 
-  shootingStar.style.top = `${startTop}%`;
-  shootingStar.style.left = `${startLeft}px`;
+    shootingStar.style.top = `${startTop}%`;
+    shootingStar.style.left = `${startLeft}px`;
 
-  shootingStar.classList.add('active');
+    shootingStar.classList.add('active');
+  }
 
   const nextDelay = 4000 + Math.random() * 10000;
   setTimeout(launchShootingStar, nextDelay);
@@ -112,10 +115,11 @@ function nearestStars(point, candidates, count) {
   return nearest.map(entry => entry.star);
 }
 
-function constellationEdges(stars, endpoints) {
+function constellationEdges(stars, endpoints, loop = false) {
   const edges = [];
   for (let i = 1; i < stars.length; i++) edges.push([stars[i - 1], stars[i]]);
   if (endpoints === 1) edges.push([stars[0], stars[stars.length - 2]]);
+  else if (loop) edges.push([stars[1], stars[stars.length - 2]]);
   return edges;
 }
 
@@ -131,9 +135,17 @@ function edgesCross([a, b], [c, d]) {
     (b1 === 0 && onSegment(r, s, p)) || (b2 === 0 && onSegment(r, s, q));
 }
 
-function uncrossedOrder(stars, endpoints, ownCluster) {
+function uncrossedOrder(stars, endpoints, ownCluster, loop = false) {
+  const radius = Math.max(80, Math.min(window.innerWidth, window.innerHeight) * 0.25);
+  const positions = stars.map(starCenter);
+  const center = positions.reduce((sum, point) => ({ x: sum.x + point.x / stars.length, y: sum.y + point.y / stars.length }), { x: 0, y: 0 });
+  if (positions.some(point => Math.hypot(point.x - center.x, point.y - center.y) > radius)) return null;
+  const tooLong = ([a, b]) => {
+    const start = starCenter(a), end = starCenter(b);
+    return Math.hypot(start.x - end.x, start.y - end.y) > radius * 1.5;
+  };
   const otherEdges = constellations.filter(cluster => cluster !== ownCluster)
-    .flatMap(cluster => constellationEdges(cluster.stars, cluster.endpoints));
+    .flatMap(cluster => constellationEdges(cluster.stars, cluster.endpoints, cluster.loop));
   const first = endpoints === 2 ? stars[0] : null;
   const last = stars[stars.length - 1];
   const remaining = endpoints === 2 ? stars.slice(1, -1) : stars.slice(0, -1);
@@ -142,9 +154,9 @@ function uncrossedOrder(stars, endpoints, ownCluster) {
   function search() {
     if (!remaining.length) {
       const result = [...path, last];
-      const all = constellationEdges(result, endpoints);
+      const all = constellationEdges(result, endpoints, loop);
       for (let i = 0; i < all.length; i++) {
-        if (otherEdges.some(edge => edgesCross(all[i], edge))) return null;
+        if (tooLong(all[i]) || otherEdges.some(edge => edgesCross(all[i], edge))) return null;
         for (let j = 0; j < i; j++) if (edgesCross(all[i], all[j])) return null;
       }
       return result;
@@ -152,7 +164,7 @@ function uncrossedOrder(stars, endpoints, ownCluster) {
     for (let i = 0; i < remaining.length; i++) {
       const star = remaining[i];
       const edge = path.length ? [path[path.length - 1], star] : null;
-      if (edge && (otherEdges.some(other => edgesCross(edge, other)) || edges.some(other => edgesCross(edge, other)))) continue;
+      if (edge && (tooLong(edge) || otherEdges.some(other => edgesCross(edge, other)) || edges.some(other => edgesCross(edge, other)))) continue;
       remaining.splice(i, 1);
       path.push(star);
       if (edge) edges.push(edge);
@@ -168,7 +180,7 @@ function uncrossedOrder(stars, endpoints, ownCluster) {
 }
 
 function drawConstellation(cluster, duration = 0.8) {
-  const edges = constellationEdges(cluster.stars, cluster.endpoints);
+  const edges = constellationEdges(cluster.stars, cluster.endpoints, cluster.loop);
   const wanted = new Set(edges.map(([a, b]) => [starIds.get(a), starIds.get(b)].sort((x, y) => x - y).join('-')));
   for (const [key, line] of cluster.lines) {
     if (wanted.has(key)) continue;
@@ -225,7 +237,7 @@ function updateConstellations() {
   };
   const used = new Set(constellations.flatMap(cluster => cluster.stars));
   let attempts = 0;
-  while (constellations.length < 3 && visibleStars().filter(star => !used.has(star)).length >= 6) {
+  while (constellations.length < 2 && visibleStars().filter(star => !used.has(star)).length >= 6) {
     if (++attempts > 12) break;
     const point = { x: Math.random() * window.innerWidth - bounds.left, y: Math.random() * window.innerHeight - bounds.top };
     const members = nearestStars(point, visible.filter(star => !used.has(star)), Math.random() < 0.5 ? 5 : 6);
@@ -237,12 +249,13 @@ function updateConstellations() {
       members.splice(members.indexOf(next), 1);
     }
     const endpoints = Math.random() < 0.5 ? 1 : 2;
-    const noncrossing = uncrossedOrder(ordered, endpoints);
+    const loop = endpoints === 2 && Math.random() < 0.5;
+    const noncrossing = uncrossedOrder(ordered, endpoints, null, loop);
     if (!noncrossing) continue;
     noncrossing.forEach(star => used.add(star));
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     constellationLayer.appendChild(group);
-    const cluster = { stars: noncrossing, endpoints, group, lines: new Map() };
+    const cluster = { stars: noncrossing, endpoints, loop, group, lines: new Map() };
     constellations.push(cluster);
     drawConstellation(cluster);
   }
@@ -265,7 +278,7 @@ function updateConstellations() {
       for (const candidate of candidates) {
         const members = [...cluster.stars];
         members[i] = candidate;
-        order = uncrossedOrder(members, cluster.endpoints, cluster);
+        order = uncrossedOrder(members, cluster.endpoints, cluster, cluster.loop);
         if (order) { next = candidate; break; }
       }
       if (!next) continue;
