@@ -28,11 +28,18 @@
     }`;
   const simulate = common + `
     uniform float damping;
+    uniform float opening;
     const float waveSpeed = 0.8;
     out vec4 result;
     void main() {
       ivec2 p = ivec2(gl_FragCoord.xy);
       if (p.x == 0 || p.y == 0 || p.x == size.x - 1 || p.y == size.y - 1) { result = vec4(0); return; }
+      if (opening >= 0.0) {
+        ivec2 d = p - drop;
+        float h = abs(d.x) <= 2 && abs(d.y) <= 2 ? opening * exp(-float(d.x*d.x + d.y*d.y) / 4.0) : 0.0;
+        result = vec4(h, h, 0, 1);
+        return;
+      }
       float h = heightAt(p);
       float lap = heightAt(p+ivec2(1,0)) + heightAt(p-ivec2(1,0)) + heightAt(p+ivec2(0,1)) + heightAt(p-ivec2(0,1)) - 4.0*h;
       float next = (2.0*h - texelFetch(state,p,0).g + 0.1*waveSpeed*waveSpeed*lap) * damping;
@@ -99,7 +106,7 @@
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw Error(gl.getProgramInfoLog(program));
     const uniforms = {};
-    for (const name of ['state', 'size', 'drop', 'dropStrength', 'phase', 'damping']) {
+    for (const name of ['state', 'size', 'drop', 'dropStrength', 'phase', 'damping', 'opening']) {
       uniforms[name] = gl.getUniformLocation(program, name);
     }
     gl.useProgram(program);
@@ -116,6 +123,7 @@
   let query = null, framesSinceCheck = 0, generation = 0, queryGeneration = 0;
   let rippleTimer, hasEntered = false;
   const drops = [];
+  let opening = null;
   function resize() {
     // On touch devices the canvas extends beyond the intro behind the browser bars.
     const newOutputWidth = Math.max(2, canvas.clientWidth);
@@ -155,6 +163,7 @@
     active = false;
     generation++;
     drops.length = 0;
+    opening = null;
   }
   try { resize(); } catch (error) { console.warn('GPU waves unavailable:', error); return; }
   window.waveGPU = true;
@@ -162,6 +171,7 @@
     if (!frame && visible && !motion.matches && !document.hidden && active) frame = requestAnimationFrame(draw);
   }
   function disturb(x, y, lift = 1) {
+    opening = null;
     drops.push([x, y, 1.5 * lift]);
     activity++;
     active = true;
@@ -169,8 +179,14 @@
     scheduleRipple();
     start();
   }
-  function randomRipple(lift = 1) {
-    disturb(Math.floor(width * (0.2 + Math.random() * 0.6)), Math.floor(height * (0.2 + Math.random() * 0.6)), lift);
+  function randomRipple(lift = 1, first = false) {
+    const x = Math.floor(width * (0.2 + Math.random() * 0.6));
+    const y = Math.floor(height * (0.2 + Math.random() * 0.6));
+    disturb(x, y, lift);
+    if (first) {
+      drops.pop();
+      opening = { x, y, lift, step: 0 };
+    }
   }
   function scheduleRipple() {
     clearTimeout(rippleTimer);
@@ -217,7 +233,7 @@
         return;
       }
     }
-    if (steps > 0 && !query && !point && ++framesSinceCheck >= 20) {
+    if (steps > 0 && !query && !point && !opening && ++framesSinceCheck >= 20) {
       framesSinceCheck = 0;
       query = gl.createQuery();
       queryGeneration = generation;
@@ -233,7 +249,10 @@
       const drop = drops.shift();
       gl.bindFramebuffer(gl.FRAMEBUFFER, targets[1].framebuffer);
       gl.viewport(0, 0, width, height);
-      setup(sim, drop);
+      setup(sim, opening ? [opening.x, opening.y, 0] : drop);
+      const progress = opening ? ++opening.step / 45 : 0;
+      gl.uniform1f(sim.uniforms.opening, opening ? 1.5 * opening.lift * progress * progress * (3 - 2 * progress) : -1);
+      if (opening && opening.step >= 45) opening = null;
       gl.uniform1f(sim.uniforms.damping, (activity > 3 ? 0.97 : 0.995) * sizeDamping);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       targets.reverse();
@@ -287,5 +306,5 @@
     }
     start();
   }, { threshold: [0, 0.5] }).observe(section);
-  if (!motion.matches) randomRipple(1.3);
+  if (!motion.matches) randomRipple(4, true);
 })();

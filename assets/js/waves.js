@@ -55,17 +55,18 @@ function resizeWave() {
   else engine.resizeWave(w, h);
 }
 
-function disturbWave(x, y, lift = 1) {
+function disturbWave(x, y, lift = 1, first = false) {
   generation++;
   waveActive = true;
-  if (worker) worker.postMessage({ x, y, generation, lift });
+  if (worker) worker.postMessage({ x, y, generation, lift, first });
+  else if (first) engine.openWave(x, y, lift);
   else engine.disturbWave(x, y, lift);
   scheduleRipple();
 }
 
-function randomRipple(lift = 1) {
+function randomRipple(lift = 1, first = false) {
   disturbWave(Math.floor(width * (0.2 + Math.random() * 0.6)),
-    Math.floor(height * (0.2 + Math.random() * 0.6)), lift);
+    Math.floor(height * (0.2 + Math.random() * 0.6)), lift, first);
   updateWave();
 }
 
@@ -89,7 +90,7 @@ function updateWave() {
 
 waveSection.addEventListener('click', (event) => {
   if (reducedMotion.matches) return;
-  const bounds = waveSection.getBoundingClientRect();
+  const bounds = waveCanvas.getBoundingClientRect();
   disturbWave(Math.floor((event.clientX - bounds.left) / bounds.width * width),
     Math.floor((event.clientY - bounds.top) / bounds.height * height));
   updateWave();
@@ -120,5 +121,5 @@ new IntersectionObserver(([entry]) => {
   updateWave();
 }, { threshold: [0, 0.5] }).observe(waveSection);
 resizeWave();
-if (!reducedMotion.matches) randomRipple(1.3);
+if (!reducedMotion.matches) randomRipple(4, true);
 }

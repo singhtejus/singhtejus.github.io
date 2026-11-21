@@ -23,6 +23,7 @@ onmessage = async ({ data }) => {
   if ('w' in data) ready.resizeWave(data.w, data.h);
   else if ('x' in data) {
     generation = data.generation;
-    ready.disturbWave(data.x, data.y, data.lift);
+    if (data.first) ready.openWave(data.x, data.y, data.lift);
+    else ready.disturbWave(data.x, data.y, data.lift);
   } else setRunning(data.running);
 };

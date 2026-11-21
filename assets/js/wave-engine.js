@@ -5,6 +5,7 @@ function createWaveEngine(waveCanvas, stencil) {
   const waveContext = waveCanvas.getContext('2d');
   let width, height, current, previous, pixels;
   let sizeDamping = 1, waveActivity = 0;
+  let opening = null;
 
   function resizeWave(w, h) {
     sizeDamping = 1 - 0.012 * (1 - Math.min(w / 900, 1));
@@ -27,10 +28,12 @@ function createWaveEngine(waveCanvas, stencil) {
     }
     pixels = waveContext.createImageData(width, height);
     waveActivity = 0;
+    opening = null;
 
   }
 
   function disturbWave(x, y, lift = 1) {
+    opening = null;
     waveActivity += 1;
 
     // Peak one cell from the center, then fade to zero at the original rim.
@@ -56,6 +59,24 @@ function createWaveEngine(waveCanvas, stencil) {
     let strongestSlope = 0;
     const data = pixels.data;
     for (let step = 0; step < steps; step++) {
+      if (opening) {
+        const progress = ++opening.step / 45;
+        const lift = opening.lift * progress * progress * (3 - 2 * progress);
+        current.fill(0);
+        previous.fill(0);
+        for (let dy = -6; dy <= 6; dy++) {
+          for (let dx = -6; dx <= 6; dx++) {
+            const x = opening.x + dx, y = opening.y + dy;
+            const distance = Math.hypot(dx, dy);
+            const offset = distance < 1 ? 1 - distance * distance : (distance - 1) / 5;
+            const taper = distance < 1 ? 1 - 0.04 * offset * offset : 1 - offset * offset;
+            if (taper > 0 && x > 0 && x < width - 1 && y > 0 && y < height - 1) {
+              current[y * width + x] = previous[y * width + x] = 0.6 * lift * taper ** 3;
+            }
+          }
+        }
+        if (opening.step >= 45) opening = null;
+      }
       const damping = waveActivity > 3 ? 0.98 : 0.996;
       waveActivity *= damping;
       const decay = damping * sizeDamping;
@@ -108,7 +129,7 @@ function createWaveEngine(waveCanvas, stencil) {
     }
     pixels.data.copyWithin(0, width * 4, width * 8);
     pixels.data.copyWithin((height - 1) * width * 4, (height - 2) * width * 4, (height - 1) * width * 4);
-    if (strongestSlope > 0.006) {
+    if (opening || strongestSlope > 0.006) {
       waveContext.putImageData(pixels, 0, 0);
       return true;
     }
@@ -118,7 +139,11 @@ function createWaveEngine(waveCanvas, stencil) {
     waveActivity = 0;
     return false;
   }
-  return { resizeWave, disturbWave, drawWave };
+  function openWave(x, y, lift) {
+    opening = { x, y, lift, step: 0 };
+    waveActivity = 1;
+  }
+  return { resizeWave, disturbWave, openWave, drawWave };
 }
 
 // Shared by the worker and the main-thread fallback.
