@@ -5,7 +5,6 @@ const sectionLinks = [...document.querySelectorAll('.floating-nav a[href^="#"]')
 let navigationFrame = 0;
 const intro = document.querySelector('.home .header');
 const navigation = document.querySelector('.floating-nav');
-const wave = document.querySelector('.wave');
 const previousSection = document.querySelector('.previously');
 const previousShade = document.querySelector('#previous-shade');
 const resumeSection = document.querySelector('.home #resume');
@@ -15,7 +14,7 @@ function updateNavigation() {
   if (intro) {
     const bottom = intro.getBoundingClientRect().bottom;
     navigation.hidden = bottom > window.innerHeight * 0.5;
-    wave.style.opacity = Math.max(0, Math.min(1, bottom / window.innerHeight));
+    document.querySelector('.wave').style.opacity = Math.max(0, Math.min(1, bottom / window.innerHeight));
   }
   if (previousSection) {
     const bounds = previousSection.getBoundingClientRect();

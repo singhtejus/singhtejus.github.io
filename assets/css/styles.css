@@ -447,6 +447,10 @@ main {
   font-size: 1.15rem;
 }
 
+.header-text .explore-hint {
+  font-size: 0.65rem;
+}
+
 .explore-link {
   display: inline-block;
   margin-top: 24px;

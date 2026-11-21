@@ -1,52 +1,72 @@
 if (!window.waveGPU) {
-const waveCanvas = document.querySelector('.wave');
+let waveCanvas = document.querySelector('.wave');
 const waveSection = document.querySelector('.header');
-const waveContext = waveCanvas.getContext('2d');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-let width, height, current, previous, pixels;
-let waveFrame = 0;
+let width, height, outputWidth, outputHeight;
+let setLocalRunning;
 let visible = false;
 let introPresent = false;
-let waveActivity = 0;
-let sizeDamping = 1;
+let worker, engine, generation = 0;
+let transferred = false;
+function useLocalEngine() {
+  worker?.terminate();
+  worker = null;
+  if (transferred) {
+    const replacement = waveCanvas.cloneNode();
+    waveCanvas.replaceWith(replacement);
+    waveCanvas = replacement;
+  }
+  engine = createWaveEngine(waveCanvas);
+  setLocalRunning = createWaveLoop(engine, finishWave);
+}
+try {
+  if (!waveCanvas.transferControlToOffscreen) throw Error();
+  worker = new Worker(new URL('wave-worker.js', document.currentScript.src));
+  const canvas = waveCanvas.transferControlToOffscreen();
+  transferred = true;
+  worker.postMessage({ canvas }, [canvas]);
+  worker.onerror = () => {
+    useLocalEngine();
+    outputWidth = undefined;
+    resizeWave();
+    if (introPresent && !reducedMotion.matches && !document.hidden) randomRipple();
+  };
+  worker.onmessage = ({ data }) => {
+    if (data.fallback) worker.onerror();
+    else if (data.generation === generation) finishWave();
+  };
+} catch {
+  useLocalEngine();
+}
 let waveActive = false;
 let rippleTimer, hasEntered = false;
 
 function resizeWave() {
-  sizeDamping = 1 - 0.012 * (1 - Math.min(waveSection.clientWidth / 900, 1));
-  const newWidth = Math.max(2, Math.round(waveSection.clientWidth / 8));
-  const newHeight = Math.max(2, Math.round(waveSection.clientHeight / 8));
-  if (newWidth === width && newHeight === height) return;
-  width = newWidth;
-  height = newHeight;
-  waveCanvas.width = width;
-  waveCanvas.height = height;
-  current = new Float32Array(width * height);
-  previous = new Float32Array(width * height);
-  pixels = waveContext.createImageData(width, height);
-  waveActivity = 0;
+  const w = waveSection.clientWidth, h = waveSection.clientHeight;
+  if (w === outputWidth && h === outputHeight) return;
+  outputWidth = w;
+  outputHeight = h;
+  width = Math.max(2, Math.round(w / waveCellSize));
+  height = Math.max(2, Math.round(h / waveCellSize));
+  generation++;
   waveActive = false;
+  updateWave();
+  if (worker) worker.postMessage({ w, h });
+  else engine.resizeWave(w, h);
 }
 
-function disturbWave(x, y) {
-  waveActivity += 1;
+function disturbWave(x, y, lift = 1) {
+  generation++;
   waveActive = true;
-  for (let dy = -2; dy <= 2; dy++) {
-    for (let dx = -2; dx <= 2; dx++) {
-      const px = x + dx;
-      const py = y + dy;
-      if (px > 0 && px < width - 1 && py > 0 && py < height - 1) {
-        current[py * width + px] += 1.5 * Math.exp(-(dx * dx + dy * dy) / 4);
-      }
-    }
-  }
+  if (worker) worker.postMessage({ x, y, generation, lift });
+  else engine.disturbWave(x, y, lift);
   scheduleRipple();
 }
 
-function randomRipple() {
+function randomRipple(lift = 1) {
   disturbWave(Math.floor(width * (0.2 + Math.random() * 0.6)),
-    Math.floor(height * (0.2 + Math.random() * 0.6)));
-  if (!waveFrame) updateWave();
+    Math.floor(height * (0.2 + Math.random() * 0.6)), lift);
+  updateWave();
 }
 
 function scheduleRipple() {
@@ -56,60 +76,15 @@ function scheduleRipple() {
   }
 }
 
-function drawWave() {
-  let strongestSlope = 0;
-  const damping = waveActivity > 3 ? 0.97 : 0.995;
-  waveActivity *= damping;
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
-      const i = y * width + x;
-      // The center and four neighbors form the five-point Laplacian.
-      const laplacian = current[i - 1] + current[i + 1] + current[i - width] + current[i + width] - 4 * current[i];
-      previous[i] = (2 * current[i] - previous[i] + 0.1 * laplacian) * damping * sizeDamping;
-      const slopeX = current[i - 1] - current[i + 1];
-      const slopeY = current[i - width] - current[i + width];
-      const slope = slopeX + slopeY;
-      strongestSlope = Math.max(strongestSlope, Math.abs(slope));
-      const magnitude = Math.hypot(slopeX, slopeY);
-      const strength = Math.max(Math.abs(slope), magnitude * 0.35);
-      const alpha = Math.min(95, strength * 180);
-      const direction = slope / Math.max(Math.SQRT2 * magnitude, 0.0001);
-      const blend = Math.max(0, Math.min(1, (direction + 0.65) / 1.3));
-      const light = blend * blend * (3 - 2 * blend);
-      const p = i * 4;
-      pixels.data[p] = 25 + 160 * light;
-      pixels.data[p + 1] = 25 + 200 * light;
-      pixels.data[p + 2] = 25 + 230 * light;
-      pixels.data[p + 3] = alpha;
-    }
-  }
-  [current, previous] = [previous, current];
-  // Extend the rendered edge without changing the simulation's fixed boundary.
-  for (let y = 1; y < height - 1; y++) {
-    const row = y * width * 4;
-    pixels.data.copyWithin(row, row + 4, row + 8);
-    pixels.data.copyWithin(row + (width - 1) * 4, row + (width - 2) * 4, row + (width - 1) * 4);
-  }
-  pixels.data.copyWithin(0, width * 4, width * 8);
-  pixels.data.copyWithin((height - 1) * width * 4, (height - 2) * width * 4, (height - 1) * width * 4);
-  waveContext.putImageData(pixels, 0, 0);
-  waveFrame = 0;
-  if (strongestSlope > 0.006) {
-    waveFrame = requestAnimationFrame(drawWave);
-  } else {
-    waveContext.clearRect(0, 0, width, height);
-    current.fill(0);
-    previous.fill(0);
-    waveActivity = 0;
-    waveActive = false;
-    if (introPresent && !reducedMotion.matches && !document.hidden) randomRipple();
-  }
+function finishWave() {
+  waveActive = false;
+  if (introPresent && !reducedMotion.matches && !document.hidden) randomRipple();
 }
 
 function updateWave() {
-  cancelAnimationFrame(waveFrame);
-  waveFrame = 0;
-  if (visible && waveActive && !reducedMotion.matches && !document.hidden) waveFrame = requestAnimationFrame(drawWave);
+  const running = visible && waveActive && !reducedMotion.matches && !document.hidden;
+  if (worker) worker.postMessage({ running });
+  else setLocalRunning(running);
 }
 
 waveSection.addEventListener('click', (event) => {
@@ -117,7 +92,7 @@ waveSection.addEventListener('click', (event) => {
   const bounds = waveSection.getBoundingClientRect();
   disturbWave(Math.floor((event.clientX - bounds.left) / bounds.width * width),
     Math.floor((event.clientY - bounds.top) / bounds.height * height));
-  if (!waveFrame) updateWave();
+  updateWave();
 });
 window.addEventListener('resize', () => {
   resizeWave();
@@ -145,5 +120,5 @@ new IntersectionObserver(([entry]) => {
   updateWave();
 }, { threshold: [0, 0.5] }).observe(waveSection);
 resizeWave();
-if (!reducedMotion.matches) randomRipple();
+if (!reducedMotion.matches) randomRipple(1.3);
 }

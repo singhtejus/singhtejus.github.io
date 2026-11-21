@@ -28,6 +28,7 @@
   </svg>
   <div class="sky-anchor" aria-hidden="true">
     <div id="starfield">
+      <canvas class="wave" aria-hidden="true"></canvas>
       <div id="previous-shade"></div>
     </div>
   </div>
@@ -41,11 +42,11 @@
 
   <main class="home">
     <section class="header">
-      <canvas class="wave" aria-hidden="true"></canvas>
       <div class="header-text">
         <h1>Hi I'm Tejus Singh</h1>
         <p>Researcher, student, and engineer.</p>
-        <a class="explore-link" href="#about-me">Explore ↓</a>
+        <a class="explore-link" href="#about-me">Explore ↓</a> 
+        <p class="explore-hint">[Or tap anywhere on the screen]</p>
       </div>
     </section>
 
@@ -119,6 +120,7 @@
   </main>
 
   <script src="assets/js/stars.js"></script>
+  <script src="assets/js/wave-engine.js"></script>
   <script src="assets/js/waves-gpu.js"></script>
   <script>
     if (!window.waveGPU) {

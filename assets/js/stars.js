@@ -40,16 +40,16 @@ const shootingStar = document.createElement('div');
 shootingStar.className = 'shooting-star';
 starfield.appendChild(shootingStar);
 
-function launchShootingStar() {
+shootingStar.addEventListener('animationend', () => {
   shootingStar.classList.remove('active');
+});
 
+function launchShootingStar() {
   const startTop = Math.random() * 55;
   const startLeft = -200 - Math.random() * 200;
 
   shootingStar.style.top = `${startTop}%`;
   shootingStar.style.left = `${startLeft}px`;
-
-  void shootingStar.offsetWidth;
 
   shootingStar.classList.add('active');
 
@@ -61,6 +61,11 @@ setTimeout(launchShootingStar, 3000);
 
 const mobileGlow = matchMedia('(hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference)');
 const stars = [...starfield.querySelectorAll('.star')];
+const starPositions = new Map(stars.map(star => [star, {
+  x: parseFloat(star.style.left) / 100,
+  y: parseFloat(star.style.top) / 100,
+  size: parseFloat(star.style.width),
+}]));
 const desktopGlow = matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
 const risingRayStars = new Set();
 const fadingRayStars = new Set();
@@ -78,6 +83,7 @@ function updateRays() {
   const mobile = mobileGlow.matches;
   const targetCount = mobile ? Math.round(stars.length * 0.18) : 7;
   const glowClass = mobile ? 'is-lit' : 'ambient-lit';
+  const extinguished = [];
   const phase = star => {
     let animation = twinkleAnimations.get(star);
     if (!animation) {
@@ -96,7 +102,7 @@ function updateRays() {
   for (const star of fadingRayStars) {
     const progress = phase(star);
     if (progress == null || progress >= 0.7 || progress < 0.5) {
-      star.classList.remove('ambient-lit', 'is-lit');
+      extinguished.push(star);
       fadingRayStars.delete(star);
       coolingRayStars.set(star, performance.now() + 1000);
     }
@@ -104,15 +110,21 @@ function updateRays() {
   for (const [star, until] of coolingRayStars) {
     if (performance.now() >= until) coolingRayStars.delete(star);
   }
-  if (risingRayStars.size + fadingRayStars.size + coolingRayStars.size >= targetCount) return;
-  const candidates = stars.filter(star => {
+  const needsCandidates = risingRayStars.size + fadingRayStars.size + coolingRayStars.size < targetCount;
+  const fieldBounds = needsCandidates && !mobile ? starfield.getBoundingClientRect() : null;
+  const candidates = needsCandidates ? stars.filter(star => {
     if (risingRayStars.has(star) || fadingRayStars.has(star) || coolingRayStars.has(star)) return false;
     const progress = phase(star);
     if (progress == null || progress >= 0.35) return false;
     if (mobile) return true;
-    const rect = star.getBoundingClientRect();
-    return rect.right > 0 && rect.left < window.innerWidth && rect.bottom > 0 && rect.top < window.innerHeight;
-  });
+    const { x, y, size } = starPositions.get(star);
+    const left = fieldBounds.left + x * fieldBounds.width;
+    const top = fieldBounds.top + y * fieldBounds.height;
+    // Include the maximum twinkle scale when checking the viewport.
+    return left + size * 1.8 > 0 && left - size * 0.4 < window.innerWidth &&
+      top + size * 1.8 > 0 && top - size * 0.4 < window.innerHeight;
+  }) : [];
+  for (const star of extinguished) star.classList.remove('ambient-lit', 'is-lit');
   while (risingRayStars.size + fadingRayStars.size + coolingRayStars.size < targetCount && candidates.length) {
     const [star] = candidates.splice(Math.floor(Math.random() * candidates.length), 1);
     star.classList.add(glowClass);
@@ -120,7 +132,21 @@ function updateRays() {
   }
 }
 
-window.addEventListener('pageshow', () => {
-  requestAnimationFrame(updateRays);
-  setInterval(updateRays, 250);
-}, { once: true });
+let rayTimer;
+
+function scheduleRays() {
+  clearInterval(rayTimer);
+  rayTimer = undefined;
+  if (document.hidden || (!desktopGlow.matches && !mobileGlow.matches)) {
+    updateRays();
+    return;
+  }
+  updateRays();
+  rayTimer = setInterval(updateRays, 250);
+}
+
+window.addEventListener('pageshow', scheduleRays);
+window.addEventListener('pagehide', () => clearInterval(rayTimer));
+document.addEventListener('visibilitychange', scheduleRays);
+desktopGlow.addEventListener('change', scheduleRays);
+mobileGlow.addEventListener('change', scheduleRays);

@@ -6,6 +6,10 @@ const pointerStars = [...document.querySelectorAll('.star')].map((element) => ({
   radius: parseFloat(element.style.width) / 2,
   trailSample: Math.random(),
 }));
+const starGrid = Array.from({ length: 100 }, () => []);
+for (const star of pointerStars) {
+  starGrid[Math.floor(star.y * 10) * 10 + Math.floor(star.x * 10)].push(star);
+}
 const highlightedStars = new Set();
 let lightFrame = 0;
 let cursorX = 0;
@@ -16,21 +20,31 @@ function clearTitleLight() {
   lightFrame = 0;
   title.style.removeProperty('--light-x');
   title.style.removeProperty('--light-y');
-  for (const star of highlightedStars) {
-    star.style.removeProperty('--star-fill');
-    star.style.removeProperty('--star-glow');
-    star.style.removeProperty('--trail-opacity');
-    star.classList.remove('has-light');
+  for (const { element } of highlightedStars) {
+    element.style.removeProperty('--star-fill');
+    element.style.removeProperty('--star-glow');
+    element.style.removeProperty('--trail-opacity');
+    element.classList.remove('has-light');
   }
   highlightedStars.clear();
 }
 
-function highlightStars(x, y) {
-  const fieldBounds = document.querySelector('#starfield').getBoundingClientRect();
-  for (const star of pointerStars) {
+function highlightStars(x, y, fieldBounds) {
+  // Include the previous selection so stars that just left the glow are cleared.
+  const nearby = new Set(highlightedStars);
+  const minX = Math.max(0, Math.floor((x - fieldBounds.left - 326) / fieldBounds.width * 10));
+  const maxX = Math.min(9, Math.floor((x - fieldBounds.left + 320) / fieldBounds.width * 10));
+  const minY = Math.max(0, Math.floor((y - fieldBounds.top - 246) / fieldBounds.height * 10));
+  const maxY = Math.min(9, Math.floor((y - fieldBounds.top + 240) / fieldBounds.height * 10));
+  for (let row = minY; row <= maxY; row++) {
+    for (let column = minX; column <= maxX; column++) {
+      for (const star of starGrid[row * 10 + column]) nearby.add(star);
+    }
+  }
+  for (const star of nearby) {
     const dx = (x - fieldBounds.left - star.x * fieldBounds.width - star.radius) / 320;
     const dy = (y - fieldBounds.top - star.y * fieldBounds.height - star.radius) / 240;
-    const strength = Math.max(0, 1 - Math.hypot(dx, dy));
+    const strength = Math.abs(dx) >= 1 || Math.abs(dy) >= 1 ? 0 : Math.max(0, 1 - Math.hypot(dx, dy));
     if (strength > 0) {
       star.element.style.setProperty('--star-fill',
         `radial-gradient(circle, rgba(${255 - strength * 45}, ${255 - strength * 15}, 255, ${0.8 + strength * 0.2}), rgba(${255 - strength * 185}, ${255 - strength * 90}, 255, ${0.8 + strength * 0.15}))`);
@@ -43,8 +57,8 @@ function highlightStars(x, y) {
         star.element.style.removeProperty('--trail-opacity');
         star.element.classList.remove('has-light');
       }
-      highlightedStars.add(star.element);
-    } else if (highlightedStars.delete(star.element)) {
+      highlightedStars.add(star);
+    } else if (highlightedStars.delete(star)) {
       star.element.style.removeProperty('--star-fill');
       star.element.style.removeProperty('--star-glow');
       star.element.style.removeProperty('--trail-opacity');
@@ -63,12 +77,13 @@ window.addEventListener('pointermove', (event) => {
   lightFrame = requestAnimationFrame(() => {
     lightFrame = 0;
     const bounds = title.getBoundingClientRect();
+    const fieldBounds = isTouch ? null : starfield.getBoundingClientRect();
     title.style.setProperty('--light-x', `${cursorX - bounds.left}px`);
     title.style.setProperty('--light-y', `${cursorY - bounds.top}px`);
 
     if (isTouch) return;
 
-    highlightStars(cursorX, cursorY);
+    highlightStars(cursorX, cursorY, fieldBounds);
   });
 });
 
