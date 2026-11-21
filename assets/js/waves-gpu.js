@@ -117,12 +117,12 @@
   let rippleTimer, hasEntered = false;
   const drops = [];
   function resize() {
-    sizeDamping = 1 - 0.012 * (1 - Math.min(section.clientWidth / 900, 1));
-    const newWidth = Math.max(2, Math.round(section.clientWidth / 8));
-    // Extend the plane in depth so its tilted projection fills the viewport.
-    const newHeight = Math.max(2, Math.round(section.clientHeight / (8 * Math.cos(tilt))));
-    const newOutputWidth = Math.max(2, Math.round(section.clientWidth));
-    const newOutputHeight = Math.max(2, Math.round(section.clientHeight));
+    // On touch devices the canvas extends beyond the intro behind the browser bars.
+    const newOutputWidth = Math.max(2, canvas.clientWidth);
+    const newOutputHeight = Math.max(2, canvas.clientHeight);
+    sizeDamping = 1 - 0.012 * (1 - Math.min(newOutputWidth / 900, 1));
+    const newWidth = Math.max(2, Math.round(newOutputWidth / 8));
+    const newHeight = Math.max(2, Math.round(newOutputHeight / (8 * Math.cos(tilt))));
     if (newWidth === width && newHeight === height && newOutputWidth === outputWidth && newOutputHeight === outputHeight) return;
     targets.forEach(({ texture, framebuffer }) => { gl.deleteTexture(texture); gl.deleteFramebuffer(framebuffer); });
     width = newWidth;
@@ -257,10 +257,12 @@
       disturb(Math.round(x * (width - 1)), Math.round(y * (height - 1)));
     }
   });
-  window.addEventListener('resize', () => {
+  function resizeSurface() {
     resize();
     if (introPresent && !active && !motion.matches && !document.hidden) randomRipple();
-  });
+  }
+  if (typeof ResizeObserver === 'function') new ResizeObserver(resizeSurface).observe(canvas);
+  else window.addEventListener('resize', resizeSurface);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) nextStep = undefined;
     scheduleRipple();
