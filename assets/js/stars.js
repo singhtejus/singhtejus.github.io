@@ -81,7 +81,7 @@ function updateRays() {
     return;
   }
   const mobile = mobileGlow.matches;
-  const targetCount = mobile ? Math.round(stars.length * 0.18) : 7;
+  const targetCount = mobile ? Math.round(stars.length * 0.15) : 7;
   const glowClass = mobile ? 'is-lit' : 'ambient-lit';
   const extinguished = [];
   const phase = star => {
