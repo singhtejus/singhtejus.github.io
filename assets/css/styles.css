@@ -245,6 +245,25 @@ main a {
   background: rgba(0, 0, 0, 0.55);
 }
 
+.constellations {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  stroke: rgba(200, 225, 255, 0.28);
+  stroke-width: 0.7;
+}
+
+.constellations line {
+  transition: opacity linear;
+}
+
+.constellations .lit-connection {
+  stroke: rgba(185, 220, 255, 0.45);
+}
+
 .star {
   position: absolute;
   filter: var(--star-glow, brightness(1) drop-shadow(0 0 4px rgba(100, 195, 255, 0)) drop-shadow(0 0 9px rgba(110, 200, 255, 0)));
